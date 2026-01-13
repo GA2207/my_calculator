@@ -71,18 +71,83 @@ def calculer(nombre1, nombre2, operateur):
     else:
         return None
 
-if __name__ == "__main__":
-    # Test de l'historique
+def afficher_menu():
+    """Affiche le menu principal"""
+    print("\n" + "="*50)
+    print("CALCULATRICE PYTHON")
+    print("="*50)
+    print("1. Effectuer un calcul")
+    print("2. Voir l'historique")
+    print("3. Effacer l'historique")
+    print("4. Quitter")
+    print("="*50)
+
+def main():
+    """Fonction principale du programme"""
     historique = []
     
-    # Simulation de quelques calculs
-    historique.append("5 + 3 = 8")
-    historique.append("10 - 4 = 6")
-    historique.append("6 * 7 = 42")
+    print("Bienvenue dans la Calculatrice Python !")
+    print("Vous pouvez effectuer des calculs simples.")
     
-    afficher_historique(historique)
-    
-    # Test d'effacement
-    historique.clear()
-    print("\nAprès effacement :")
-    afficher_historique(historique)
+    while True:
+        afficher_menu()
+        choix = input("Votre choix : ")
+        
+        if choix == '1':
+            # Effectuer un calcul
+            print("\nOpérations disponibles : +, -, *, /, ** (puissance)")
+            
+            nombre1 = demander_nombre("Entrez le premier nombre : ")
+            operateur = input("Entrez l'opérateur : ")
+            nombre2 = demander_nombre("Entrez le deuxième nombre : ")
+            
+            # Normaliser l'opérateur avant de calculer
+            operateur_original = operateur
+            if operateur == 'x':
+                operateur = '*'
+            elif operateur == '÷':
+                operateur = '/'
+            elif operateur == '^':
+                operateur = '**'
+            
+            resultat = calculer(nombre1, nombre2, operateur)
+            
+            if resultat is None:
+                if operateur not in ['+', '-', '*', '/', '**']:
+                    print(f"\nErreur : Opérateur '{operateur_original}' non reconnu !")
+                else:
+                    print("\nErreur : Division par zéro impossible !")
+            else:
+                # Affichage du résultat
+                operation = f"{nombre1} {operateur} {nombre2} = {resultat}"
+                print(f"\nRésultat : {operation}")
+                historique.append(operation)
+        
+        elif choix == '2':
+            # Afficher l'historique
+            afficher_historique(historique)
+        
+        elif choix == '3':
+            # Effacer l'historique
+            if len(historique) > 0:
+                confirmation = input("\nÊtes-vous sûr de vouloir effacer l'historique ? (o/n) : ")
+                if confirmation.lower() == 'o' or confirmation.lower() == 'oui':
+                    historique.clear()
+                    print("L'historique a été effacé avec succès.")
+                else:
+                    print("Opération annulée.")
+            else:
+                print("\nL'historique est déjà vide.")
+        
+        elif choix == '4':
+            # Quitter
+            print("\nMerci d'avoir utilisé la Calculatrice Python !")
+            print("À bientôt !")
+            break
+        
+        else:
+            print("\nErreur : Choix invalide. Veuillez choisir entre 1 et 4.")
+
+# Lancement du programme
+if __name__ == "__main__":
+    main()
