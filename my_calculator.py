@@ -1,3 +1,6 @@
+# Calculatrice Python - Version Console
+# Projet développé sans module Math ni eval()
+
 def demander_nombre(message):
     """Demande un nombre à l'utilisateur et gère les erreurs"""
     while True:
@@ -11,7 +14,6 @@ def demander_nombre(message):
         except ValueError:
             print("Erreur : Veuillez entrer un nombre valide !")
 
-# Math Calcul
 def additionner(a, b):
     """Additionne deux nombres"""
     return a + b
@@ -42,6 +44,18 @@ def puissance(a, b):
         return 1 / resultat
     return resultat
 
+def afficher_historique(historique):
+    """Affiche l'historique des calculs"""
+    if len(historique) == 0:
+        print("\nAucun calcul dans l'historique.")
+    else:
+        print("\n" + "="*50)
+        print("HISTORIQUE DES CALCULS")
+        print("="*50)
+        for i, operation in enumerate(historique, 1):
+            print(f"{i}. {operation}")
+        print("="*50)
+
 def calculer(nombre1, nombre2, operateur):
     """Effectue le calcul selon l'opérateur choisi"""
     if operateur == '+':
@@ -58,20 +72,17 @@ def calculer(nombre1, nombre2, operateur):
         return None
 
 if __name__ == "__main__":
-    # Test avec entrée utilisateur
-    print("Test de la calculatrice basique")
-    nombre1 = demander_nombre("Premier nombre : ")
-    operateur = input("Opérateur (+, -, *, /, **) : ")
-    nombre2 = demander_nombre("Deuxième nombre : ")
+    # Test de l'historique
+    historique = []
     
-    resultat = calculer(nombre1, nombre2, operateur)
-    if resultat is not None:
-        print(f"Résultat : {nombre1} {operateur} {nombre2} = {resultat}")
-    else:
-        print("Erreur dans le calcul")
-    # Tests basiques
-    print("Test addition:", additionner(5, 3))
-    print("Test soustraction:", soustraire(10, 4))
-    print("Test multiplication:", multiplier(6, 7))
-    print("Test division:", diviser(20, 4))
-    print("Test puissance:", puissance(2, 3))
+    # Simulation de quelques calculs
+    historique.append("5 + 3 = 8")
+    historique.append("10 - 4 = 6")
+    historique.append("6 * 7 = 42")
+    
+    afficher_historique(historique)
+    
+    # Test d'effacement
+    historique.clear()
+    print("\nAprès effacement :")
+    afficher_historique(historique)
