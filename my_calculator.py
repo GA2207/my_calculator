@@ -1,6 +1,4 @@
-# Calculatrice Python - Version Console
-# Projet développé sans module Math ni eval()
-
+# Math Calcul
 def additionner(a, b):
     """Additionne deux nombres"""
     return a + b
