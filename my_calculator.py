@@ -1,5 +1,15 @@
-# Calculatrice Python - Version Console
-# Projet développé sans module Math ni eval()
+def demander_nombre(message):
+    """Demande un nombre à l'utilisateur et gère les erreurs"""
+    while True:
+        try:
+            entree = input(message)
+            if '.' in entree or ',' in entree:
+                entree = entree.replace(',', '.')
+                return float(entree)
+            else:
+                return int(entree)
+        except ValueError:
+            print("Erreur : Veuillez entrer un nombre valide !")
 
 def additionner(a, b):
     """Additionne deux nombres"""
@@ -31,10 +41,30 @@ def puissance(a, b):
         return 1 / resultat
     return resultat
 
+def calculer(nombre1, nombre2, operateur):
+    """Effectue le calcul selon l'opérateur choisi"""
+    if operateur == '+':
+        return additionner(nombre1, nombre2)
+    elif operateur == '-':
+        return soustraire(nombre1, nombre2)
+    elif operateur == '*' or operateur == 'x':
+        return multiplier(nombre1, nombre2)
+    elif operateur == '/' or operateur == '÷':
+        return diviser(nombre1, nombre2)
+    elif operateur == '**' or operateur == '^':
+        return puissance(nombre1, nombre2)
+    else:
+        return None
+
 if __name__ == "__main__":
-    # Tests basiques
-    print("Test addition:", additionner(5, 3))
-    print("Test soustraction:", soustraire(10, 4))
-    print("Test multiplication:", multiplier(6, 7))
-    print("Test division:", diviser(20, 4))
-    print("Test puissance:", puissance(2, 3))
+    # Test avec entrée utilisateur
+    print("Test de la calculatrice basique")
+    nombre1 = demander_nombre("Premier nombre : ")
+    operateur = input("Opérateur (+, -, *, /, **) : ")
+    nombre2 = demander_nombre("Deuxième nombre : ")
+    
+    resultat = calculer(nombre1, nombre2, operateur)
+    if resultat is not None:
+        print(f"Résultat : {nombre1} {operateur} {nombre2} = {resultat}")
+    else:
+        print("Erreur dans le calcul")
