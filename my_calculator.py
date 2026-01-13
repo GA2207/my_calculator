@@ -1,7 +1,3 @@
-# Calculatrice Scientifique Python
-# Projet perso - Calculatrice scientifique complète sans imports
-# Tous les algos sont codés à la main
-
 def demander_nombre(message):
     while True:
         try:
