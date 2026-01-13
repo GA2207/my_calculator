@@ -11,6 +11,7 @@ def demander_nombre(message):
         except ValueError:
             print("Erreur : Veuillez entrer un nombre valide !")
 
+# Math Calcul
 def additionner(a, b):
     """Additionne deux nombres"""
     return a + b
@@ -68,3 +69,9 @@ if __name__ == "__main__":
         print(f"Résultat : {nombre1} {operateur} {nombre2} = {resultat}")
     else:
         print("Erreur dans le calcul")
+    # Tests basiques
+    print("Test addition:", additionner(5, 3))
+    print("Test soustraction:", soustraire(10, 4))
+    print("Test multiplication:", multiplier(6, 7))
+    print("Test division:", diviser(20, 4))
+    print("Test puissance:", puissance(2, 3))
