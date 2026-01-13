@@ -19,26 +19,80 @@ def ask_number(message):
             print("Erreur : entrée invalide (ex: 12, 12.5, -3)")
 
 
-# 3) Choisir une opération
+# 3) Choisir une opération (AJOUT des opérations mathématiques)
 def ask_operation():
     while True:
         print("\nOpérations disponibles :")
-        print(" +  Addition")
-        print(" -  Soustraction")
-        print(" *  Multiplication")
-        print(" /  Division")
-        print(" %  Modulo")
-        print(" ** Puissance (exposant entier)")
+        print(" +   Addition")
+        print(" -   Soustraction")
+        print(" *   Multiplication")
+        print(" /   Division")
+        print(" %   Modulo")
+        print(" **  Puissance (exposant entier)")
+        # --- AJOUTS ---
+        print(" //  Division entière")
+        print(" √   Racine carrée (utilise seulement le 1er nombre)")
+        print(" !   Factorielle (utilise seulement le 1er nombre)")
+        print(" abs Valeur absolue (utilise seulement le 1er nombre)")
+        print(" neg Opposé (utilise seulement le 1er nombre)")
+        print(" inv Inverse 1/a (utilise seulement le 1er nombre)")
+        print(" min Minimum (a, b)")
+        print(" max Maximum (a, b)")
+        print(" avg Moyenne (a, b)")
+        print(" round Arrondi (a, b = nb de décimales entier)")
+        print(" floor Arrondi inférieur (utilise seulement le 1er nombre)")
+        print(" ceil Arrondi supérieur (utilise seulement le 1er nombre)")
 
         op = input("Choisissez une opération : ").strip()
 
-        if op in ["+", "-", "*", "/", "%", "**"]:
+        if op in [
+            "+", "-", "*", "/", "%", "**",
+            "//", "√", "!", "abs", "neg", "inv",
+            "min", "max", "avg", "round", "floor", "ceil"
+        ]:
             return op
 
         print("Erreur : opération invalide.")
 
 
-# 4) Calcul
+# --- AJOUT : fonctions mathématiques internes (sans import) ---
+def _is_integer(x):
+    return x == int(x)
+
+def _factorial(n):
+    if n < 0:
+        raise CalcError("Factorielle impossible pour n < 0.")
+    if n > 2000:
+        raise CalcError("Factorielle trop grande.")
+    r = 1
+    i = 2
+    while i <= n:
+        r *= i
+        i += 1
+    return r
+
+def _sqrt(x):
+    if x < 0:
+        raise CalcError("Racine carrée d’un nombre négatif interdite.")
+    if x == 0:
+        return 0.0
+    g = x if x >= 1 else 1.0
+    i = 0
+    while i < 50:
+        g = (g + x / g) / 2.0
+        i += 1
+    return g
+
+def _floor(x):
+    i = int(x)  # tronque vers 0
+    return i if x >= 0 or x == i else i - 1
+
+def _ceil(x):
+    i = int(x)  # tronque vers 0
+    return i if x <= 0 or x == i else i + 1
+
+
+# 4) Calcul (AJOUT des opérations mathématiques)
 def compute(a, b, op):
     if op == "+":
         return a + b
@@ -66,6 +120,70 @@ def compute(a, b, op):
         if abs(b) > 1000:
             raise CalcError("Puissance trop grande.")
         return a ** int(b)
+
+    # --- AJOUTS ---
+    if op == "//":
+        if b == 0:
+            raise CalcError("Division entière par zéro.")
+        return _floor(a / b)
+
+    if op == "√":
+        return _sqrt(a)
+
+    if op == "!":
+        if not _is_integer(a):
+            raise CalcError("Factorielle : entier requis.")
+        return _factorial(int(a))
+
+    if op == "abs":
+        return a if a >= 0 else -a
+
+    if op == "neg":
+        return -a
+
+    if op == "inv":
+        if a == 0:
+            raise CalcError("Inverse de zéro interdit.")
+        return 1 / a
+
+    if op == "min":
+        return a if a <= b else b
+
+    if op == "max":
+        return a if a >= b else b
+
+    if op == "avg":
+        return (a + b) / 2
+
+    if op == "round":
+        if not _is_integer(b):
+            raise CalcError("Arrondi : décimales entières.")
+        n = int(b)
+        if abs(n) > 12:
+            raise CalcError("Arrondi : trop de décimales (max 12).")
+
+        p = 10 ** abs(n)
+
+        if n >= 0:
+            x = a * p
+            if x >= 0:
+                x = int(x + 0.5)
+            else:
+                x = int(x - 0.5)
+            return x / p
+        else:
+            x = a / p
+            if x >= 0:
+                x = int(x + 0.5)
+            else:
+                x = int(x - 0.5)
+            return x * p
+
+    if op == "floor":
+        return _floor(a)
+
+    if op == "ceil":
+        return _ceil(a)
 
     raise CalcError("Opération inconnue.")
 
@@ -120,13 +238,20 @@ def main():
             try:
                 result = compute(a, b, op)
 
-                line = (
-                    pretty_number(a)
-                    + " " + op + " "
-                    + pretty_number(b)
-                    + " = "
-                    + pretty_number(result)
-                )
+                # affichage ligne historique
+                unary_ops = ["√", "!", "abs", "neg", "inv", "floor", "ceil"]
+                if op in unary_ops:
+                    line = op + "(" + pretty_number(a) + ") = " + pretty_number(result)
+                elif op == "round":
+                    line = "round(" + pretty_number(a) + ", " + pretty_number(b) + ") = " + pretty_number(result)
+                else:
+                    line = (
+                        pretty_number(a)
+                        + " " + op + " "
+                        + pretty_number(b)
+                        + " = "
+                        + pretty_number(result)
+                    )
 
                 print("Résultat :", pretty_number(result))
                 history.append(line)
