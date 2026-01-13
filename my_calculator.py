@@ -1,25 +1,9 @@
-# ==========================================
-#  Calculatrice MENU scolaire - SANS IMPORT
-#  Opérations :
-#   +  addition
-#   -  soustraction
-#   *  multiplication
-#   /  division
-#   %  modulo
-#   ** puissance (exposant entier)
-# ==========================================
-
-
-# -------------------------
 # 1) Erreur personnalisée
-# -------------------------
 class CalcError(Exception):
     pass
 
 
-# -------------------------
 # 2) Lire un nombre
-# -------------------------
 def ask_number(message):
     while True:
         s = input(message).strip()
@@ -35,9 +19,7 @@ def ask_number(message):
             print("Erreur : entrée invalide (ex: 12, 12.5, -3)")
 
 
-# -------------------------
 # 3) Choisir une opération
-# -------------------------
 def ask_operation():
     while True:
         print("\nOpérations disponibles :")
@@ -56,9 +38,7 @@ def ask_operation():
         print("Erreur : opération invalide.")
 
 
-# -------------------------
 # 4) Calcul
-# -------------------------
 def compute(a, b, op):
     if op == "+":
         return a + b
@@ -90,9 +70,7 @@ def compute(a, b, op):
     raise CalcError("Opération inconnue.")
 
 
-# -------------------------
 # 5) Affichage propre
-# -------------------------
 def pretty_number(x):
     if x == int(x):
         return str(int(x))
@@ -106,9 +84,7 @@ def pretty_number(x):
     return s
 
 
-# -------------------------
 # 6) Menu
-# -------------------------
 def show_menu():
     print("\n===== MENU =====")
     print("1) Faire un calcul")
@@ -125,9 +101,7 @@ def ask_choice():
         print("Erreur : choisissez entre 1 et 4.")
 
 
-# -------------------------
 # 7) Programme principal
-# -------------------------
 def main():
     history = []
 
