@@ -1,11 +1,15 @@
 HISTORY_FILE = "history.txt"
-OPS = {"+", "-", "*", "/"}
-
-
+OPS = {
+    "+": (1, "L"),
+    "-": (1, "L"),
+    "*": (2, "L"),
+    "/": (2, "L"),
+    "%": (2, "L"),
+    "^": (3, "R"),
+}
 def save_history(line: str) -> None:
     with open(HISTORY_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
-
 
 def read_history() -> str:
     try:
@@ -14,11 +18,9 @@ def read_history() -> str:
     except FileNotFoundError:
         return ""
 
-
 def clear_history() -> None:
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         f.write("")
-
 
 def tokenize(expr: str) -> list[str]:
     """Découpe l'expression en nombres/opérateurs. Supporte décimaux et espaces."""
@@ -28,6 +30,11 @@ def tokenize(expr: str) -> list[str]:
 
     while i < len(expr):
         ch = expr[i]
+                # parenthèses
+        if ch in ("(", ")"):
+            tokens.append(ch)
+            i += 1
+            continue
 
         # opérateur
         if ch in OPS:
@@ -71,6 +78,78 @@ def tokenize(expr: str) -> list[str]:
 
     return tokens
 
+def to_rpn(tokens: list[str]) -> list[str]:
+    """
+    Transforme tokens en RPN (notation postfixée) pour gérer priorités + parenthèses.
+    """
+    output: list[str] = []
+    stack: list[str] = []
+
+    for tok in tokens:
+        # opérateur
+        if tok in OPS:
+            prec_tok, assoc_tok = OPS[tok]
+
+            while stack and stack[-1] in OPS:
+                prec_top, _assoc_top = OPS[stack[-1]]
+
+                # assoc gauche: on sort les ops de priorité >=
+                # assoc droite: on sort les ops de priorité >
+                if (assoc_tok == "L" and prec_top >= prec_tok) or (assoc_tok == "R" and prec_top > prec_tok):
+                    output.append(stack.pop())
+                else:
+                    break
+
+            stack.append(tok)
+
+        # parenthèse ouvrante
+        elif tok == "(":
+            stack.append(tok)
+
+        # parenthèse fermante
+        elif tok == ")":
+            while stack and stack[-1] != "(":
+                output.append(stack.pop())
+            if not stack:
+                raise ValueError("Parenthèses mal fermées.")
+            stack.pop()  # enlève "("
+
+        # nombre
+        else:
+            output.append(tok)
+
+    # vider la pile
+    while stack:
+        if stack[-1] in ("(", ")"):
+            raise ValueError("Parenthèses mal fermées.")
+        output.append(stack.pop())
+
+    return output
+
+
+def eval_rpn(rpn: list[str]) -> float:
+    """
+    Calcule une expression en RPN.
+    Exemple RPN: 2 3 4 * +  => 2 + (3*4)
+    """
+    stack: list[float] = []
+
+    for tok in rpn:
+        if tok in OPS:
+            if len(stack) < 2:
+                raise ValueError("Expression invalide (opérateur mal placé).")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(apply_op(a, tok, b))
+        else:
+            try:
+                stack.append(float(tok))
+            except ValueError:
+                raise ValueError(f"Nombre invalide: '{tok}'") from None
+
+    if len(stack) != 1:
+        raise ValueError("Expression invalide.")
+    return stack[0]
 
 def apply_op(a: float, op: str, b: float) -> float:
     if op == "+":
@@ -83,54 +162,20 @@ def apply_op(a: float, op: str, b: float) -> float:
         if b == 0:
             raise ZeroDivisionError("Division par zéro interdite.")
         return a / b
+    if op == "%":
+        if b == 0:
+            raise ZeroDivisionError("Modulo par zéro interdit.")
+        return a % b
+    if op == "^":
+        return a ** b
     raise ValueError(f"Opérateur inconnu: {op}")
-
-
-def eval_with_precedence(tokens: list[str]) -> float:
-    """Calcule en respectant * / avant + -."""
-    # 1) Pass * /
-    out = []
-    i = 0
-    while i < len(tokens):
-        tok = tokens[i]
-        if tok in ("*", "/"):
-            if not out:
-                raise ValueError("Expression invalide.")
-            if i + 1 >= len(tokens):
-                raise ValueError("Expression invalide.")
-
-            a = float(out.pop())
-            b = float(tokens[i + 1])
-            out.append(str(apply_op(a, tok, b)))
-            i += 2
-        else:
-            out.append(tok)
-            i += 1
-
-    if not out:
-        raise ValueError("Expression vide.")
-    result = float(out[0])
-    i = 1
-    while i < len(out):
-        op = out[i]
-        if op not in ("+", "-"):
-            raise ValueError("Expression invalide (opérateur attendu).")
-        if i + 1 >= len(out):
-            raise ValueError("Expression invalide (nombre manquant).")
-        b = float(out[i + 1])
-        result = apply_op(result, op, b)
-        i += 2
-
-    return result
-
 
 def calculate(expr: str) -> float:
     tokens = tokenize(expr)
-    # validation simple: alternance nombre/op/nombre
     if len(tokens) < 3:
         raise ValueError("Veuillez saisir au moins 2 nombres et 1 opérateur.")
-    return eval_with_precedence(tokens)
-
+    rpn = to_rpn(tokens)
+    return eval_rpn(rpn)
 
 def menu() -> None:
     while True:
@@ -166,7 +211,6 @@ def menu() -> None:
 
         else:
             print("Choix invalide.")
-
 
 if __name__ == "__main__":
     menu()
