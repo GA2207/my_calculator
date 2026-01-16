@@ -1,283 +1,824 @@
-# 1) Erreur personnalisée
-class CalcError(Exception):
-    pass
-
-
-# 2) Lire un nombre
-def ask_number(message):
+def demander_nombre(message):
     while True:
-        s = input(message).strip()
-        s = s.replace(",", ".")
-
-        if s == "":
-            print("Erreur : vous devez entrer un nombre.")
-            continue
-
         try:
-            return float(s)
-        except:
-            print("Erreur : entrée invalide (ex: 12, 12.5, -3)")
+            entree = input(message)
+            if '.' in entree or ',' in entree:
+                entree = entree.replace(',', '.')
+                return float(entree)
+            else:
+                return int(entree)
+        except ValueError:
+            print("Erreur : entre un nombre valide stp !")
 
+# Opérations basiques
+def additionner(a, b):
+    return a + b
 
-# 3) Choisir une opération (AJOUT des opérations mathématiques)
-def ask_operation():
-    while True:
-        print("\nOpérations disponibles :")
-        print(" +   Addition")
-        print(" -   Soustraction")
-        print(" *   Multiplication")
-        print(" /   Division")
-        print(" %   Modulo")
-        print(" **  Puissance (exposant entier)")
-        # --- AJOUTS ---
-        print(" //  Division entière")
-        print(" √   Racine carrée (utilise seulement le 1er nombre)")
-        print(" !   Factorielle (utilise seulement le 1er nombre)")
-        print(" abs Valeur absolue (utilise seulement le 1er nombre)")
-        print(" neg Opposé (utilise seulement le 1er nombre)")
-        print(" inv Inverse 1/a (utilise seulement le 1er nombre)")
-        print(" min Minimum (a, b)")
-        print(" max Maximum (a, b)")
-        print(" avg Moyenne (a, b)")
-        print(" round Arrondi (a, b = nb de décimales entier)")
-        print(" floor Arrondi inférieur (utilise seulement le 1er nombre)")
-        print(" ceil Arrondi supérieur (utilise seulement le 1er nombre)")
+def soustraire(a, b):
+    return a - b
 
-        op = input("Choisissez une opération : ").strip()
+def multiplier(a, b):
+    return a * b
 
-        if op in [
-            "+", "-", "*", "/", "%", "**",
-            "//", "√", "!", "abs", "neg", "inv",
-            "min", "max", "avg", "round", "floor", "ceil"
-        ]:
-            return op
+def diviser(a, b):
+    if b == 0:
+        return None
+    return a / b
 
-        print("Erreur : opération invalide.")
+def puissance(a, b):
+    # Gère les puissances positives et négatives
+    if b == 0:
+        return 1
+    
+    resultat = 1
+    exposant = abs(int(b))
+    
+    for _ in range(exposant):
+        resultat *= a
+    
+    if b < 0:
+        return 1 / resultat
+    return resultat
 
+def modulo(a, b):
+    if b == 0:
+        return None
+    quotient = int(a / b)
+    reste = a - (quotient * b)
+    return reste
 
-# --- AJOUT : fonctions mathématiques internes (sans import) ---
-def _is_integer(x):
-    return x == int(x)
-
-def _factorial(n):
+def factorielle(n):
+    # Classique factorielle
     if n < 0:
-        raise CalcError("Factorielle impossible pour n < 0.")
-    if n > 2000:
-        raise CalcError("Factorielle trop grande.")
-    r = 1
-    i = 2
-    while i <= n:
-        r *= i
-        i += 1
-    return r
+        return None
+    if n == 0 or n == 1:
+        return 1
+    
+    resultat = 1
+    for i in range(2, int(n) + 1):
+        resultat *= i
+    return resultat
 
-def _sqrt(x):
-    if x < 0:
-        raise CalcError("Racine carrée d’un nombre négatif interdite.")
-    if x == 0:
-        return 0.0
-    g = x if x >= 1 else 1.0
-    i = 0
-    while i < 50:
-        g = (g + x / g) / 2.0
-        i += 1
-    return g
-
-def _floor(x):
-    i = int(x)  # tronque vers 0
-    return i if x >= 0 or x == i else i - 1
-
-def _ceil(x):
-    i = int(x)  # tronque vers 0
-    return i if x <= 0 or x == i else i + 1
-
-
-# 4) Calcul (AJOUT des opérations mathématiques)
-def compute(a, b, op):
-    if op == "+":
-        return a + b
-
-    if op == "-":
-        return a - b
-
-    if op == "*":
-        return a * b
-
-    if op == "/":
-        if b == 0:
-            raise CalcError("Division par zéro interdite.")
-        return a / b
-
-    if op == "%":
-        if b == 0:
-            raise CalcError("Modulo par zéro interdit.")
-        return a % b
-
-    if op == "**":
-        # exposant entier uniquement
-        if b != int(b):
-            raise CalcError("La puissance doit être un entier.")
-        if abs(b) > 1000:
-            raise CalcError("Puissance trop grande.")
-        return a ** int(b)
-
-    # --- AJOUTS ---
-    if op == "//":
-        if b == 0:
-            raise CalcError("Division entière par zéro.")
-        return _floor(a / b)
-
-    if op == "√":
-        return _sqrt(a)
-
-    if op == "!":
-        if not _is_integer(a):
-            raise CalcError("Factorielle : entier requis.")
-        return _factorial(int(a))
-
-    if op == "abs":
-        return a if a >= 0 else -a
-
-    if op == "neg":
-        return -a
-
-    if op == "inv":
-        if a == 0:
-            raise CalcError("Inverse de zéro interdit.")
-        return 1 / a
-
-    if op == "min":
-        return a if a <= b else b
-
-    if op == "max":
-        return a if a >= b else b
-
-    if op == "avg":
-        return (a + b) / 2
-
-    if op == "round":
-        if not _is_integer(b):
-            raise CalcError("Arrondi : décimales entières.")
-        n = int(b)
-        if abs(n) > 12:
-            raise CalcError("Arrondi : trop de décimales (max 12).")
-
-        p = 10 ** abs(n)
-
-        if n >= 0:
-            x = a * p
-            if x >= 0:
-                x = int(x + 0.5)
-            else:
-                x = int(x - 0.5)
-            return x / p
-        else:
-            x = a / p
-            if x >= 0:
-                x = int(x + 0.5)
-            else:
-                x = int(x - 0.5)
-            return x * p
-
-    if op == "floor":
-        return _floor(a)
-
-    if op == "ceil":
-        return _ceil(a)
-
-    raise CalcError("Opération inconnue.")
-
-
-# 5) Affichage propre
-def pretty_number(x):
-    if x == int(x):
-        return str(int(x))
-
-    s = str(x)
-    if "." in s:
-        while s.endswith("0"):
-            s = s[:-1]
-        if s.endswith("."):
-            s = s[:-1]
-    return s
-
-
-# 6) Menu
-def show_menu():
-    print("\n===== MENU =====")
-    print("1) Faire un calcul")
-    print("2) Voir l'historique")
-    print("3) Effacer l'historique")
-    print("4) Quitter")
-
-
-def ask_choice():
+def racine_carree(n, precision=0.000001):
+    # Méthode de Newton pour la racine carrée
+    # x_nouveau = (x + n/x) / 2
+    if n < 0:
+        return None
+    if n == 0:
+        return 0
+    
+    x = n
     while True:
-        c = input("Votre choix (1-4) : ").strip()
-        if c in ["1", "2", "3", "4"]:
-            return c
-        print("Erreur : choisissez entre 1 et 4.")
+        racine = (x + n / x) / 2
+        if abs(racine - x) < precision:
+            return racine
+        x = racine
 
+def racine_n(nombre, n, precision=0.000001):
+    # Racine n-ième avec Newton aussi
+    if n == 0:
+        return None
+    if nombre < 0 and n % 2 == 0:
+        return None
+    
+    if nombre == 0:
+        return 0
+    
+    negatif = False
+    if nombre < 0:
+        negatif = True
+        nombre = -nombre
+    
+    x = nombre
+    for _ in range(100):
+        x_nouveau = ((n - 1) * x + nombre / puissance(x, n - 1)) / n
+        if abs(x_nouveau - x) < precision:
+            return -x_nouveau if negatif else x_nouveau
+        x = x_nouveau
+    
+    return -x if negatif else x
 
-# 7) Programme principal
-def main():
-    history = []
+def valeur_absolue(n):
+    if n < 0:
+        return -n
+    return n
 
-    print("=== Calculatrice MENU (sans import) ===")
+def logarithme_naturel(x, precision=0.000001):
+    # ln par série de Taylor - j'ai galéré sur celui-là
+    if x <= 0:
+        return None
+    
+    # Pour x proche de 1, formule : ln(x) = 2 * [(x-1)/(x+1) + 1/3*((x-1)/(x+1))^3 + ...]
+    if 0.5 < x < 2:
+        y = (x - 1) / (x + 1)
+        y_carre = y * y
+        resultat = 0
+        terme = y
+        
+        for n in range(1, 100, 2):
+            resultat += terme / n
+            terme *= y_carre
+            if abs(terme / n) < precision:
+                break
+        
+        return 2 * resultat
+    
+    elif x >= 2:
+        # Réduction en divisant par e
+        compteur = 0
+        E = 2.718281828459045
+        while x > 2:
+            x /= E
+            compteur += 1
+        return compteur + logarithme_naturel(x, precision)
+    
+    else:
+        # Pour x < 0.5 : ln(x) = -ln(1/x)
+        return -logarithme_naturel(1 / x, precision)
 
-    while True:
-        show_menu()
-        choice = ask_choice()
+def logarithme_base(x, base):
+    # log_base(x) = ln(x) / ln(base)
+    if x <= 0 or base <= 0 or base == 1:
+        return None
+    
+    ln_x = logarithme_naturel(x)
+    ln_base = logarithme_naturel(base)
+    
+    if ln_x is None or ln_base is None:
+        return None
+    
+    return ln_x / ln_base
 
-        # ---- calcul ----
-        if choice == "1":
-            a = ask_number("Entrez le premier nombre : ")
-            b = ask_number("Entrez le deuxième nombre : ")
-            op = ask_operation()
-
-            try:
-                result = compute(a, b, op)
-
-                # affichage ligne historique
-                unary_ops = ["√", "!", "abs", "neg", "inv", "floor", "ceil"]
-                if op in unary_ops:
-                    line = op + "(" + pretty_number(a) + ") = " + pretty_number(result)
-                elif op == "round":
-                    line = "round(" + pretty_number(a) + ", " + pretty_number(b) + ") = " + pretty_number(result)
-                else:
-                    line = (
-                        pretty_number(a)
-                        + " " + op + " "
-                        + pretty_number(b)
-                        + " = "
-                        + pretty_number(result)
-                    )
-
-                print("Résultat :", pretty_number(result))
-                history.append(line)
-
-            except CalcError as e:
-                print("Erreur :", e)
-
-        # ---- historique ----
-        elif choice == "2":
-            if len(history) == 0:
-                print("Historique vide.")
-            else:
-                print("\n--- Historique ---")
-                for i in range(len(history)):
-                    print(str(i + 1) + ") " + history[i])
-
-        # ---- effacer historique ----
-        elif choice == "3":
-            history = []
-            print("Historique effacé.")
-
-        # ---- quitter ----
-        elif choice == "4":
-            print("Au revoir.")
+def exponentielle(x, precision=0.000001):
+    # e^x avec série de Taylor : e^x = 1 + x + x²/2! + x³/3! + ...
+    resultat = 1
+    terme = 1
+    
+    for n in range(1, 100):
+        terme *= x / n
+        resultat += terme
+        if abs(terme) < precision:
             break
+    
+    return resultat
 
+# Conversions angles
+def degres_vers_radians(degres):
+    PI = 3.14159265358979323846
+    return degres * PI / 180
+
+def radians_vers_degres(radians):
+    PI = 3.14159265358979323846
+    return radians * 180 / PI
+
+def sinus(x, en_degres=False):
+    # sin avec série de Taylor
+    if en_degres:
+        x = degres_vers_radians(x)
+    
+    # Normaliser dans [-2π, 2π]
+    PI = 3.14159265358979323846
+    deux_pi = 2 * PI
+    while x > PI:
+        x -= deux_pi
+    while x < -PI:
+        x += deux_pi
+    
+    # sin(x) = x - x³/3! + x⁵/5! - x⁷/7! + ...
+    terme = x
+    somme = terme
+    
+    for n in range(1, 20):
+        terme *= -x * x / ((2 * n) * (2 * n + 1))
+        somme += terme
+    
+    return somme
+
+def cosinus(x, en_degres=False):
+    # cos avec série de Taylor
+    if en_degres:
+        x = degres_vers_radians(x)
+    
+    PI = 3.14159265358979323846
+    deux_pi = 2 * PI
+    while x > PI:
+        x -= deux_pi
+    while x < -PI:
+        x += deux_pi
+    
+    # cos(x) = 1 - x²/2! + x⁴/4! - x⁶/6! + ...
+    terme = 1
+    somme = terme
+    
+    for n in range(1, 20):
+        terme *= -x * x / ((2 * n - 1) * (2 * n))
+        somme += terme
+    
+    return somme
+
+def tangente(x, en_degres=False):
+    # tan = sin/cos
+    cos_x = cosinus(x, en_degres)
+    if abs(cos_x) < 0.0000001:
+        return None
+    return sinus(x, en_degres) / cos_x
+
+def arcsinus(x, precision=0.000001):
+    # arcsin par série de Taylor
+    if x < -1 or x > 1:
+        return None
+    
+    if x == 1:
+        return 3.14159265358979323846 / 2
+    if x == -1:
+        return -3.14159265358979323846 / 2
+    
+    resultat = x
+    terme = x
+    x_carre = x * x
+    
+    for n in range(1, 50):
+        terme *= x_carre * (2 * n - 1) * (2 * n - 1) / ((2 * n) * (2 * n + 1))
+        resultat += terme
+        if abs(terme) < precision:
+            break
+    
+    return resultat
+
+def arccosinus(x):
+    # arccos(x) = π/2 - arcsin(x)
+    arcsin_x = arcsinus(x)
+    if arcsin_x is None:
+        return None
+    PI = 3.14159265358979323846
+    return PI / 2 - arcsin_x
+
+def arctangente(x, precision=0.000001):
+    # arctan par série de Taylor
+    if x > 1:
+        PI = 3.14159265358979323846
+        return PI / 2 - arctangente(1 / x, precision)
+    if x < -1:
+        PI = 3.14159265358979323846
+        return -PI / 2 - arctangente(1 / x, precision)
+    
+    # arctan(x) = x - x³/3 + x⁵/5 - x⁷/7 + ...
+    resultat = 0
+    terme = x
+    x_carre = x * x
+    
+    for n in range(50):
+        resultat += terme / (2 * n + 1)
+        terme *= -x_carre
+        if abs(terme / (2 * n + 3)) < precision:
+            break
+    
+    return resultat
+
+# Stats
+def moyenne(liste):
+    if len(liste) == 0:
+        return None
+    
+    somme = 0
+    for nombre in liste:
+        somme += nombre
+    
+    return somme / len(liste)
+
+def mediane(liste):
+    if len(liste) == 0:
+        return None
+    
+    # Tri à bulles (j'ai pas trouvé plus simple)
+    liste_triee = liste.copy()
+    n = len(liste_triee)
+    
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if liste_triee[j] > liste_triee[j + 1]:
+                liste_triee[j], liste_triee[j + 1] = liste_triee[j + 1], liste_triee[j]
+    
+    if n % 2 == 0:
+        return (liste_triee[n // 2 - 1] + liste_triee[n // 2]) / 2
+    else:
+        return liste_triee[n // 2]
+
+def ecart_type(liste):
+    if len(liste) == 0:
+        return None
+    
+    moy = moyenne(liste)
+    somme_carres = 0
+    
+    for nombre in liste:
+        difference = nombre - moy
+        somme_carres += difference * difference
+    
+    variance = somme_carres / len(liste)
+    return racine_carree(variance)
+
+def minimum(liste):
+    if len(liste) == 0:
+        return None
+    
+    min_val = liste[0]
+    for nombre in liste:
+        if nombre < min_val:
+            min_val = nombre
+    
+    return min_val
+
+def maximum(liste):
+    if len(liste) == 0:
+        return None
+    
+    max_val = liste[0]
+    for nombre in liste:
+        if nombre > max_val:
+            max_val = nombre
+    
+    return max_val
+
+# Combinatoire
+def combinaison(n, k):
+    # C(n,k) = n! / (k! * (n-k)!)
+    if k < 0 or k > n:
+        return None
+    
+    if k == 0 or k == n:
+        return 1
+    
+    # Optimisation : C(n,k) = C(n, n-k)
+    if k > n - k:
+        k = n - k
+    
+    resultat = 1
+    for i in range(k):
+        resultat *= (n - i)
+        resultat /= (i + 1)
+    
+    return int(resultat)
+
+def arrangement(n, k):
+    # A(n,k) = n! / (n-k)!
+    if k < 0 or k > n:
+        return None
+    
+    resultat = 1
+    for i in range(n, n - k, -1):
+        resultat *= i
+    
+    return int(resultat)
+
+def est_premier(n):
+    # Test de primalité simple
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    
+    # Vérif jusqu'à racine(n)
+    i = 3
+    racine = int(racine_carree(n)) + 1
+    while i <= racine:
+        if n % i == 0:
+            return False
+        i += 2
+    
+    return True
+
+def decomposition_premiers(n):
+    # Décompose en facteurs premiers
+    if n < 2:
+        return []
+    
+    facteurs = []
+    diviseur = 2
+    
+    while diviseur * diviseur <= n:
+        while n % diviseur == 0:
+            facteurs.append(diviseur)
+            n //= diviseur
+        diviseur += 1
+    
+    if n > 1:
+        facteurs.append(n)
+    
+    return facteurs
+
+def pgcd(a, b):
+    # Algorithme d'Euclide
+    a, b = int(abs(a)), int(abs(b))
+    
+    while b != 0:
+        a, b = b, a % b
+    
+    return a
+
+def ppcm(a, b):
+    # PPCM via PGCD
+    if a == 0 or b == 0:
+        return 0
+    
+    return abs(a * b) // pgcd(a, b)
+
+def afficher_historique(historique):
+    if len(historique) == 0:
+        print("\nAucun calcul dans l'historique.")
+    else:
+        print("\n" + "="*60)
+        print("HISTORIQUE DES CALCULS")
+        print("="*60)
+        for i, operation in enumerate(historique, 1):
+            print(f"{i}. {operation}")
+        print("="*60)
+
+def calculer(nombre1, nombre2, operateur):
+    if operateur == '+':
+        return additionner(nombre1, nombre2)
+    elif operateur == '-':
+        return soustraire(nombre1, nombre2)
+    elif operateur == '*' or operateur == 'x':
+        return multiplier(nombre1, nombre2)
+    elif operateur == '/' or operateur == '÷':
+        return diviser(nombre1, nombre2)
+    elif operateur == '**' or operateur == '^':
+        return puissance(nombre1, nombre2)
+    elif operateur == '%':
+        return modulo(nombre1, nombre2)
+    else:
+        return None
+
+def afficher_menu():
+    print("\n" + "="*60)
+    print("CALCULATRICE SCIENTIFIQUE")
+    print("="*60)
+    print("1.  Calcul basique (+, -, *, /, **, %)")
+    print("2.  Puissances et racines")
+    print("3.  Trigonométrie")
+    print("4.  Trigonométrie inverse")
+    print("5.  Logarithmes et exponentielle")
+    print("6.  Factorielle et combinatoire")
+    print("7.  Statistiques")
+    print("8.  Nombres premiers et PGCD/PPCM")
+    print("9.  Voir l'historique")
+    print("10. Effacer l'historique")
+    print("11. Quitter")
+    print("="*60)
+
+def menu_puissances_racines(historique):
+    print("\n--- PUISSANCES ET RACINES ---")
+    print("1. Racine carrée")
+    print("2. Racine n-ième")
+    print("3. Valeur absolue")
+    print("4. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix == '1':
+        nombre = demander_nombre("Nombre : ")
+        resultat = racine_carree(nombre)
+        
+        if resultat is None:
+            print("\nErreur : racine carrée d'un nombre négatif impossible !")
+        else:
+            operation = f"√{nombre} = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '2':
+        nombre = demander_nombre("Nombre : ")
+        n = int(demander_nombre("Indice de la racine : "))
+        resultat = racine_n(nombre, n)
+        
+        if resultat is None:
+            print("\nErreur : calcul impossible !")
+        else:
+            operation = f"{n}√{nombre} = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '3':
+        nombre = demander_nombre("Nombre : ")
+        resultat = valeur_absolue(nombre)
+        operation = f"|{nombre}| = {resultat}"
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+
+def menu_trigonometrie(historique):
+    print("\n--- TRIGONOMÉTRIE ---")
+    print("1. Sinus")
+    print("2. Cosinus")
+    print("3. Tangente")
+    print("4. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix in ['1', '2', '3']:
+        angle = demander_nombre("Angle : ")
+        unite = input("Degrés (d) ou radians (r) ? : ").lower()
+        en_degres = (unite == 'd')
+        
+        if choix == '1':
+            resultat = sinus(angle, en_degres)
+            operation = f"sin({angle}{'°' if en_degres else ' rad'}) = {resultat}"
+        elif choix == '2':
+            resultat = cosinus(angle, en_degres)
+            operation = f"cos({angle}{'°' if en_degres else ' rad'}) = {resultat}"
+        else:
+            resultat = tangente(angle, en_degres)
+            if resultat is None:
+                print("\nErreur : tangente indéfinie pour cet angle !")
+                return
+            operation = f"tan({angle}{'°' if en_degres else ' rad'}) = {resultat}"
+        
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+
+def menu_trigonometrie_inverse(historique):
+    print("\n--- TRIGONOMÉTRIE INVERSE ---")
+    print("1. Arcsinus (sin⁻¹)")
+    print("2. Arccosinus (cos⁻¹)")
+    print("3. Arctangente (tan⁻¹)")
+    print("4. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix in ['1', '2', '3']:
+        valeur = demander_nombre("Valeur : ")
+        
+        if choix == '1':
+            resultat = arcsinus(valeur)
+            if resultat is None:
+                print("\nErreur : valeur doit être entre -1 et 1 !")
+                return
+            operation = f"arcsin({valeur}) = {resultat} rad = {radians_vers_degres(resultat)}°"
+        elif choix == '2':
+            resultat = arccosinus(valeur)
+            if resultat is None:
+                print("\nErreur : valeur doit être entre -1 et 1 !")
+                return
+            operation = f"arccos({valeur}) = {resultat} rad = {radians_vers_degres(resultat)}°"
+        else:
+            resultat = arctangente(valeur)
+            operation = f"arctan({valeur}) = {resultat} rad = {radians_vers_degres(resultat)}°"
+        
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+
+def menu_logarithmes(historique):
+    print("\n--- LOGARITHMES ET EXPONENTIELLE ---")
+    print("1. Logarithme naturel (ln)")
+    print("2. Logarithme base 10 (log)")
+    print("3. Logarithme base quelconque")
+    print("4. Exponentielle (e^x)")
+    print("5. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix == '1':
+        x = demander_nombre("x : ")
+        resultat = logarithme_naturel(x)
+        
+        if resultat is None:
+            print("\nErreur : ln n'existe que pour x > 0 !")
+        else:
+            operation = f"ln({x}) = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '2':
+        x = demander_nombre("x : ")
+        resultat = logarithme_base(x, 10)
+        
+        if resultat is None:
+            print("\nErreur : log n'existe que pour x > 0 !")
+        else:
+            operation = f"log₁₀({x}) = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '3':
+        x = demander_nombre("x : ")
+        base = demander_nombre("Base : ")
+        resultat = logarithme_base(x, base)
+        
+        if resultat is None:
+            print("\nErreur : valeurs invalides !")
+        else:
+            operation = f"log_{base}({x}) = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '4':
+        x = demander_nombre("x : ")
+        resultat = exponentielle(x)
+        operation = f"e^{x} = {resultat}"
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+
+def menu_factorielle_combinatoire(historique):
+    print("\n--- FACTORIELLE ET COMBINATOIRE ---")
+    print("1. Factorielle (n!)")
+    print("2. Combinaison C(n,k)")
+    print("3. Arrangement A(n,k)")
+    print("4. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix == '1':
+        n = demander_nombre("n : ")
+        resultat = factorielle(n)
+        
+        if resultat is None:
+            print("\nErreur : factorielle impossible pour nombres négatifs !")
+        else:
+            operation = f"{int(n)}! = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '2':
+        n = int(demander_nombre("n : "))
+        k = int(demander_nombre("k : "))
+        resultat = combinaison(n, k)
+        
+        if resultat is None:
+            print("\nErreur : k doit être entre 0 et n !")
+        else:
+            operation = f"C({n},{k}) = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+    
+    elif choix == '3':
+        n = int(demander_nombre("n : "))
+        k = int(demander_nombre("k : "))
+        resultat = arrangement(n, k)
+        
+        if resultat is None:
+            print("\nErreur : k doit être entre 0 et n !")
+        else:
+            operation = f"A({n},{k}) = {resultat}"
+            print(f"\nRésultat : {operation}")
+            historique.append(operation)
+
+def menu_statistiques(historique):
+    print("\n--- STATISTIQUES ---")
+    print("Entre une série de nombres séparés par des espaces")
+    
+    entree = input("Nombres : ")
+    try:
+        liste = [float(x) for x in entree.split()]
+        
+        if len(liste) == 0:
+            print("\nErreur : aucun nombre !")
+            return
+        
+        print(f"\nMoyenne : {moyenne(liste)}")
+        print(f"Médiane : {mediane(liste)}")
+        print(f"Écart-type : {ecart_type(liste)}")
+        print(f"Min : {minimum(liste)}")
+        print(f"Max : {maximum(liste)}")
+        
+        operation = f"Stats de {liste}: moy={moyenne(liste):.2f}, med={mediane(liste):.2f}"
+        historique.append(operation)
+        
+    except ValueError:
+        print("\nErreur : format invalide !")
+
+def menu_nombres_premiers(historique):
+    print("\n--- NOMBRES PREMIERS ET PGCD/PPCM ---")
+    print("1. Test de primalité")
+    print("2. Décomposition en facteurs premiers")
+    print("3. PGCD")
+    print("4. PPCM")
+    print("5. Retour")
+    
+    choix = input("Choix : ")
+    
+    if choix == '1':
+        n = int(demander_nombre("n : "))
+        
+        if est_premier(n):
+            print(f"\n{n} est premier")
+            historique.append(f"{n} est premier")
+        else:
+            print(f"\n{n} n'est pas premier")
+            historique.append(f"{n} n'est pas premier")
+    
+    elif choix == '2':
+        n = int(demander_nombre("n : "))
+        facteurs = decomposition_premiers(n)
+        
+        if len(facteurs) == 0:
+            print(f"\n{n} ne peut pas être décomposé")
+        else:
+            print(f"\nDécomposition de {n} : {' × '.join(map(str, facteurs))}")
+            operation = f"{n} = {' × '.join(map(str, facteurs))}"
+            historique.append(operation)
+    
+    elif choix == '3':
+        a = demander_nombre("Premier nombre : ")
+        b = demander_nombre("Deuxième nombre : ")
+        resultat = pgcd(a, b)
+        
+        operation = f"PGCD({int(a)}, {int(b)}) = {resultat}"
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+    
+    elif choix == '4':
+        a = demander_nombre("Premier nombre : ")
+        b = demander_nombre("Deuxième nombre : ")
+        resultat = ppcm(a, b)
+        
+        operation = f"PPCM({int(a)}, {int(b)}) = {resultat}"
+        print(f"\nRésultat : {operation}")
+        historique.append(operation)
+
+def main():
+    historique = []
+    
+    print("="*60)
+    print("Bienvenue dans ma calculatrice scientifique !")
+    print("Tous les calculs sont codés à la main (pas de librairie)")
+    print("="*60)
+    
+    while True:
+        afficher_menu()
+        choix = input("Choix : ")
+        
+        if choix == '1':
+            print("\nOpérations : +, -, *, /, ** (puissance), % (modulo)")
+            
+            nombre1 = demander_nombre("Premier nombre : ")
+            operateur = input("Opérateur : ")
+            nombre2 = demander_nombre("Deuxième nombre : ")
+            
+            operateur_original = operateur
+            if operateur == 'x':
+                operateur = '*'
+            elif operateur == '÷':
+                operateur = '/'
+            elif operateur == '^':
+                operateur = '**'
+            
+            resultat = calculer(nombre1, nombre2, operateur)
+            
+            if resultat is None:
+                if operateur not in ['+', '-', '*', '/', '**', '%']:
+                    print(f"\nErreur : opérateur '{operateur_original}' inconnu !")
+                else:
+                    print("\nErreur : division par zéro !")
+            else:
+                operation = f"{nombre1} {operateur} {nombre2} = {resultat}"
+                print(f"\nRésultat : {operation}")
+                historique.append(operation)
+        
+        elif choix == '2':
+            menu_puissances_racines(historique)
+        
+        elif choix == '3':
+            menu_trigonometrie(historique)
+        
+        elif choix == '4':
+            menu_trigonometrie_inverse(historique)
+        
+        elif choix == '5':
+            menu_logarithmes(historique)
+        
+        elif choix == '6':
+            menu_factorielle_combinatoire(historique)
+        
+        elif choix == '7':
+            menu_statistiques(historique)
+        
+        elif choix == '8':
+            menu_nombres_premiers(historique)
+        
+        elif choix == '9':
+            afficher_historique(historique)
+        
+        elif choix == '10':
+            if len(historique) > 0:
+                confirmation = input("\nEffacer l'historique ? (o/n) : ")
+                if confirmation.lower() == 'o' or confirmation.lower() == 'oui':
+                    historique.clear()
+                    print("Historique effacé")
+                else:
+                    print("Annulé")
+            else:
+                print("\nHistorique déjà vide")
+        
+        elif choix == '11':
+            print("\n" + "="*60)
+            print("Merci d'avoir utilisé ma calculatrice !")
+            print("="*60)
+            break
+        
+        else:
+            print("\nErreur : choix invalide")
 
 if __name__ == "__main__":
     main()
