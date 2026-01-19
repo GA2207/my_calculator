@@ -1,45 +1,53 @@
-import customtkinter as ctk
-from tkinter import messagebox
-import matplotlib.pyplot as plt
-import os
+import customtkinter as ctk  # Librairie pour faire une interface graphique moderne (basée sur Tkinter)
+from tkinter import messagebox  # Boîtes de dialogue (erreur, confirmation, etc.)
+import matplotlib.pyplot as plt  # Pour tracer des graphiques
+import os  # Pour gérer les fichiers (vérifier si un fichier existe, supprimer, etc.)
 
-# THEME
-ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("blue")
+# THEME / COULEURS
+ctk.set_appearance_mode("light")          # Mode clair
+ctk.set_default_color_theme("blue")       # Thème de base (couleurs des widgets CTk)
 
-COL_BG = "#F6EFE6"
-COL_CARD = "#EFE3D3"
-COL_TEXT = "#1F1F1F"
-COL_ACCENT = "#2F5D50"
-COL_GOLD = "#B68D40"
-COL_BTN = "#FFFFFF"
-COL_BTN_OP = "#E7F0ED"
-COL_BTN_DANGER = "#F3D9D9"
+# Palette de couleurs (pour harmoniser l'interface)
+COL_BG = "#F6EFE6"          # Couleur de fond principale
+COL_CARD = "#EFE3D3"        # Couleur des "cartes" (blocs)
+COL_TEXT = "#1F1F1F"        # Couleur du texte principal
+COL_ACCENT = "#2F5D50"      # Couleur accent (boutons, titres)
+COL_GOLD = "#B68D40"        # Petite barre dorée décorative
+COL_BTN = "#FFFFFF"         # Couleur bouton standard
+COL_BTN_OP = "#E7F0ED"      # Couleur bouton "opérations"
+COL_BTN_DANGER = "#F3D9D9"  # Couleur bouton "danger" (effacer historique)
 
-HISTORY_FILE = "history.txt"
+HISTORY_FILE = "history.txt"  # Fichier où on stocke l'historique des calculs
 
 # OUTILS HISTORIQUE
 def save_history(line: str) -> None:
+    """Ajoute une ligne dans le fichier d'historique."""
     with open(HISTORY_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
 def read_history() -> str:
+    """Lit tout l'historique et renvoie une chaîne. Si le fichier n'existe pas, renvoie vide."""
     if not os.path.exists(HISTORY_FILE):
         return ""
     with open(HISTORY_FILE, "r", encoding="utf-8") as f:
         return f.read().strip()
 
 def clear_history() -> None:
+    """Supprime le fichier d'historique (donc efface tout)."""
     if os.path.exists(HISTORY_FILE):
         os.remove(HISTORY_FILE)
 
-# FONCTIONS MATH
+# FONCTIONS MATH (calculs)
 
 def demander_nombre_console(message):
-    # gardée pour compat si tu veux, mais GUI n'utilise pas input()
+    """
+    Ancienne fonction console : demande un nombre via input().
+    Gardée si tu veux réutiliser en mode console, mais l'interface graphique n'en a pas besoin.
+    """
     while True:
         try:
             entree = input(message)
+            # Support de la virgule (ex: 3,14)
             if '.' in entree or ',' in entree:
                 entree = entree.replace(',', '.')
                 return float(entree)
@@ -48,15 +56,23 @@ def demander_nombre_console(message):
         except ValueError:
             print("Erreur : entre un nombre valide stp !")
 
-def additionner(a, b): return a + b
-def soustraire(a, b): return a - b
-def multiplier(a, b): return a * b
+# Opérations de base
+def additionner(a, b): return a + b          # Addition
+def soustraire(a, b): return a - b           # Soustraction
+def multiplier(a, b): return a * b           # Multiplication
 
 def diviser(a, b):
-    if b == 0: return None
+    """Division avec protection contre la division par zéro."""
+    if b == 0: 
+        return None
     return a / b
 
 def puissance(a, b):
+    """
+    Puissance "manuel" : calcule a^b sans utiliser **.
+    - gère b=0
+    - gère b négatif (retourne 1/(a^|b|)
+    """
     if b == 0:
         return 1
     resultat = 1
@@ -68,22 +84,33 @@ def puissance(a, b):
     return resultat
 
 def modulo(a, b):
-    if b == 0: return None
+    """Modulo "manuel" avec protection b=0."""
+    if b == 0: 
+        return None
     quotient = int(a / b)
     reste = a - (quotient * b)
     return reste
 
 def factorielle(n):
-    if n < 0: return None
-    if n == 0 or n == 1: return 1
+    """Factorielle n! (uniquement pour n >= 0)."""
+    if n < 0: 
+        return None
+    if n == 0 or n == 1: 
+        return 1
     resultat = 1
     for i in range(2, int(n) + 1):
         resultat *= i
     return resultat
 
 def racine_carree(n, precision=0.000001):
-    if n < 0: return None
-    if n == 0: return 0
+    """
+    Racine carrée via méthode de Newton.
+    - retourne None si n < 0
+    """
+    if n < 0: 
+        return None
+    if n == 0: 
+        return 0
     x = n
     while True:
         racine = (x + n / x) / 2
@@ -92,17 +119,27 @@ def racine_carree(n, precision=0.000001):
         x = racine
 
 def racine_n(nombre, n, precision=0.000001):
-    if n == 0: return None
-    if nombre < 0 and n % 2 == 0: return None
-    if nombre == 0: return 0
+    """
+    Racine n-ième via Newton.
+    - n=0 => impossible
+    - nombre négatif avec n pair => impossible
+    - gère les racines impaires des nombres négatifs
+    """
+    if n == 0: 
+        return None
+    if nombre < 0 and n % 2 == 0: 
+        return None
+    if nombre == 0: 
+        return 0
 
+    # Si nombre est négatif, on calcule sur la valeur positive et on remet le signe à la fin
     negatif = False
     if nombre < 0:
         negatif = True
         nombre = -nombre
 
     x = nombre
-    for _ in range(100):
+    for _ in range(100):  # limite de sécurité pour éviter une boucle infinie
         x_nouveau = ((n - 1) * x + nombre / puissance(x, n - 1)) / n
         if abs(x_nouveau - x) < precision:
             return -x_nouveau if negatif else x_nouveau
@@ -110,10 +147,18 @@ def racine_n(nombre, n, precision=0.000001):
     return -x if negatif else x
 
 def valeur_absolue(n):
+    """Retourne la valeur absolue."""
     return -n if n < 0 else n
 
 def logarithme_naturel(x, precision=0.000001):
-    if x <= 0: return None
+    """
+    ln(x) approx :
+    - x doit être > 0
+    - utilise une série quand x est proche de 1, sinon réduit x par des divisions par e
+    """
+    if x <= 0: 
+        return None
+    # Cas "proche de 1" : série plus stable
     if 0.5 < x < 2:
         y = (x - 1) / (x + 1)
         y_carre = y * y
@@ -125,6 +170,7 @@ def logarithme_naturel(x, precision=0.000001):
             if abs(terme / n) < precision:
                 break
         return 2 * resultat
+    # Cas x grand : on ramène x vers 2 en divisant par e
     elif x >= 2:
         compteur = 0
         E = 2.718281828459045
@@ -132,10 +178,12 @@ def logarithme_naturel(x, precision=0.000001):
             x /= E
             compteur += 1
         return compteur + logarithme_naturel(x, precision)
+    # Cas x petit : ln(x) = -ln(1/x)
     else:
         return -logarithme_naturel(1 / x, precision)
 
 def logarithme_base(x, base):
+    """log_base(x) = ln(x) / ln(base), avec vérifications."""
     if x <= 0 or base <= 0 or base == 1:
         return None
     ln_x = logarithme_naturel(x)
@@ -145,6 +193,10 @@ def logarithme_base(x, base):
     return ln_x / ln_base
 
 def exponentielle(x, precision=0.000001):
+    """
+    exp(x) via série de Taylor :
+    e^x = 1 + x + x^2/2! + ...
+    """
     resultat = 1
     terme = 1
     for n in range(1, 100):
@@ -155,10 +207,16 @@ def exponentielle(x, precision=0.000001):
     return resultat
 
 def degres_vers_radians(degres):
+    """Conversion degrés -> radians."""
     PI = 3.14159265358979323846
     return degres * PI / 180
 
 def sinus(x, en_degres=False):
+    """
+    sinus via série de Taylor.
+    - possibilité de donner l'angle en degrés
+    - réduction de l'angle pour améliorer la précision
+    """
     if en_degres:
         x = degres_vers_radians(x)
     PI = 3.14159265358979323846
@@ -175,6 +233,11 @@ def sinus(x, en_degres=False):
     return somme
 
 def cosinus(x, en_degres=False):
+    """
+    cosinus via série de Taylor.
+    - possibilité de donner l'angle en degrés
+    - réduction de l'angle pour améliorer la précision
+    """
     if en_degres:
         x = degres_vers_radians(x)
     PI = 3.14159265358979323846
@@ -191,16 +254,27 @@ def cosinus(x, en_degres=False):
     return somme
 
 def tangente(x, en_degres=False):
+    """
+    tan(x) = sin(x) / cos(x)
+    - si cos(x) ~ 0 => tangente indéfinie => None
+    """
     cos_x = cosinus(x, en_degres)
     if abs(cos_x) < 0.0000001:
         return None
     return sinus(x, en_degres) / cos_x
 
 def arcsinus(x, precision=0.000001):
-    if x < -1 or x > 1: return None
+    """
+    arcsin(x) approx (série).
+    - x doit être entre -1 et 1
+    """
+    if x < -1 or x > 1: 
+        return None
     PI = 3.14159265358979323846
-    if x == 1: return PI / 2
-    if x == -1: return -PI / 2
+    if x == 1: 
+        return PI / 2
+    if x == -1: 
+        return -PI / 2
     resultat = x
     terme = x
     x_carre = x * x
@@ -212,6 +286,7 @@ def arcsinus(x, precision=0.000001):
     return resultat
 
 def arccosinus(x):
+    """arccos(x) = PI/2 - arcsin(x)."""
     arcsin_x = arcsinus(x)
     if arcsin_x is None:
         return None
@@ -219,6 +294,10 @@ def arccosinus(x):
     return PI / 2 - arcsin_x
 
 def arctangente(x, precision=0.000001):
+    """
+    arctan(x) approx (série).
+    - gère les grands x via identités pour améliorer la stabilité.
+    """
     PI = 3.14159265358979323846
     if x > 1:
         return PI / 2 - arctangente(1 / x, precision)
@@ -234,15 +313,24 @@ def arctangente(x, precision=0.000001):
             break
     return resultat
 
+# STATS
 def moyenne(liste):
-    if len(liste) == 0: return None
+    """Moyenne d'une liste (None si liste vide)."""
+    if len(liste) == 0: 
+        return None
     s = 0
     for n in liste:
         s += n
     return s / len(liste)
 
 def mediane(liste):
-    if len(liste) == 0: return None
+    """
+    Médiane :
+    - trie la liste (tri à bulles ici)
+    - renvoie le milieu (ou la moyenne des deux milieux si pair)
+    """
+    if len(liste) == 0: 
+        return None
     a = liste.copy()
     n = len(a)
     for i in range(n):
@@ -254,7 +342,9 @@ def mediane(liste):
     return a[n // 2]
 
 def ecart_type(liste):
-    if len(liste) == 0: return None
+    """Écart-type (population) : sqrt(variance)."""
+    if len(liste) == 0: 
+        return None
     moy = moyenne(liste)
     sc = 0
     for n in liste:
@@ -264,7 +354,9 @@ def ecart_type(liste):
     return racine_carree(variance)
 
 def minimum(liste):
-    if len(liste) == 0: return None
+    """Minimum d'une liste."""
+    if len(liste) == 0: 
+        return None
     m = liste[0]
     for n in liste:
         if n < m:
@@ -272,18 +364,24 @@ def minimum(liste):
     return m
 
 def maximum(liste):
-    if len(liste) == 0: return None
+    """Maximum d'une liste."""
+    if len(liste) == 0: 
+        return None
     m = liste[0]
     for n in liste:
         if n > m:
             m = n
     return m
 
+# COMBINATOIRE
 def combinaison(n, k):
-    if k < 0 or k > n: return None
-    if k == 0 or k == n: return 1
+    """Combinaison C(n,k) (nombre de façons de choisir k éléments parmi n)."""
+    if k < 0 or k > n: 
+        return None
+    if k == 0 or k == n: 
+        return 1
     if k > n - k:
-        k = n - k
+        k = n - k  # optimisation
     res = 1
     for i in range(k):
         res *= (n - i)
@@ -291,16 +389,23 @@ def combinaison(n, k):
     return int(res)
 
 def arrangement(n, k):
-    if k < 0 or k > n: return None
+    """Arrangement A(n,k) (nombre de façons d'ordonner k éléments parmi n)."""
+    if k < 0 or k > n: 
+        return None
     res = 1
     for i in range(n, n - k, -1):
         res *= i
     return int(res)
 
+# NOMBRES PREMIERS / PGCD / PPCM
 def est_premier(n):
-    if n < 2: return False
-    if n == 2: return True
-    if n % 2 == 0: return False
+    """Test si n est premier (méthode simple)."""
+    if n < 2: 
+        return False
+    if n == 2: 
+        return True
+    if n % 2 == 0: 
+        return False
     i = 3
     r = int(racine_carree(n)) + 1
     while i <= r:
@@ -310,7 +415,9 @@ def est_premier(n):
     return True
 
 def decomposition_premiers(n):
-    if n < 2: return []
+    """Décompose n en facteurs premiers (ex: 12 -> [2,2,3])."""
+    if n < 2: 
+        return []
     facteurs = []
     d = 2
     while d * d <= n:
@@ -323,25 +430,35 @@ def decomposition_premiers(n):
     return facteurs
 
 def pgcd(a, b):
+    """PGCD via l'algorithme d'Euclide."""
     a, b = int(abs(a)), int(abs(b))
     while b != 0:
         a, b = b, a % b
     return a
 
 def ppcm(a, b):
+    """PPCM = |a*b| / PGCD(a,b) (si a ou b vaut 0 => 0)."""
     if a == 0 or b == 0:
         return 0
     return abs(a * b) // pgcd(a, b)
 
-# TRACEUR : parseur "manuel"
-# (avec correction 2x, 2(x+1), (x+1)(x-1))
+# TRACEUR : petit parseur "manuel"
+# Objectif : permettre des expressions du style "2x+1", "2(x+1)", "(x+1)(x-1)" etc.
 def calculer_point_graphique(expression, x_val):
+    """
+    Calcule f(x) pour une expression entrée par l'utilisateur.
+    - remplace x par la valeur x_val
+    - gère quelques fonctions (sinus, cosinus, etc.)
+    - gère la multiplication implicite (ex: 2(x+1))
+    """
     exp = expression.replace(" ", "").lower()
-    exp = exp.replace("**", "^")
-    exp = exp.replace("x", f"({x_val})")
+    exp = exp.replace("**", "^")                 # uniformise la puissance
+    exp = exp.replace("x", f"({x_val})")         # remplace x par la valeur
 
-    # multiplication implicite
+    # multiplication implicite : ")(" devient ")*("
     exp = exp.replace(")(", ")*(")
+
+    # ajoute "*" quand on a: chiffre suivi de "("  ->  "2(" devient "2*("
     tmp = ""
     for i in range(len(exp)):
         c = exp[i]
@@ -353,18 +470,22 @@ def calculer_point_graphique(expression, x_val):
     exp = tmp
 
     def resoudre(s):
+        """Résout une expression simple sous forme de texte."""
         if not s:
             return 0
 
+        # 1) Résolution des parenthèses, en détectant aussi les fonctions
         while '(' in s:
             debut = s.find('(')
 
+            # On regarde si juste avant la parenthèse, il y a un nom de fonction connu
             nom_func = ""
             for f in ['sinus', 'cosinus', 'tangente', 'racine_carree', 'exponentielle', 'valeur_absolue']:
                 if s[:debut].endswith(f):
                     nom_func = f
                     break
 
+            # On cherche la parenthèse fermante correspondante (gestion des niveaux)
             niveau, fin = 0, -1
             for i in range(debut, len(s)):
                 if s[i] == '(':
@@ -375,8 +496,10 @@ def calculer_point_graphique(expression, x_val):
                     fin = i
                     break
 
+            # On résout le contenu entre les parenthèses
             res_int = resoudre(s[debut + 1:fin])
 
+            # Si une fonction est détectée, on applique la fonction
             if nom_func:
                 if nom_func == 'sinus':
                     val = sinus(res_int)
@@ -385,7 +508,7 @@ def calculer_point_graphique(expression, x_val):
                 elif nom_func == 'tangente':
                     val = tangente(res_int)
                     if val is None:
-                        return 0
+                        return 0  # évite crash si tangente indéfinie
                 elif nom_func == 'racine_carree':
                     val = racine_carree(res_int)
                     if val is None:
@@ -397,16 +520,20 @@ def calculer_point_graphique(expression, x_val):
                 else:
                     val = res_int
 
+                # Remplace "fonction(...)" par la valeur calculée
                 s = s[:debut - len(nom_func)] + str(val) + s[fin + 1:]
             else:
+                # Parenthèses simples : "(...)" devient juste "valeur"
                 s = s[:debut] + str(res_int) + s[fin + 1:]
 
+        # 2) Gestion + et - (en partant de la droite pour respecter la priorité)
         for i in range(len(s) - 1, -1, -1):
             if s[i] == '+' and i > 0 and s[i - 1] not in '*/^+-':
                 return resoudre(s[:i]) + resoudre(s[i + 1:])
             if s[i] == '-' and i > 0 and s[i - 1] not in '*/^+-':
                 return resoudre(s[:i]) - resoudre(s[i + 1:])
 
+        # 3) Gestion * et /
         for i in range(len(s) - 1, -1, -1):
             if s[i] == '*':
                 return resoudre(s[:i]) * resoudre(s[i + 1:])
@@ -414,10 +541,12 @@ def calculer_point_graphique(expression, x_val):
                 d = resoudre(s[i + 1:])
                 return resoudre(s[:i]) / d if d != 0 else 0
 
+        # 4) Gestion puissance ^
         if '^' in s:
             b, e = s.split('^', 1)
             return puissance(resoudre(b), resoudre(e))
 
+        # 5) Nombre final
         try:
             return float(s)
         except:
@@ -425,8 +554,9 @@ def calculer_point_graphique(expression, x_val):
 
     return resoudre(exp)
 
-# GUI HELPERS
+# OUTILS GUI : récupération de valeurs via fenêtres
 def ask_float(title, prompt):
+    """Demande un nombre (float) à l'utilisateur via une boîte de dialogue."""
     dlg = ctk.CTkInputDialog(title=title, text=prompt)
     s = dlg.get_input()
     if s is None:
@@ -440,35 +570,39 @@ def ask_float(title, prompt):
         return None
 
 def ask_int(title, prompt):
+    """Demande un entier (utilise ask_float puis convertit en int)."""
     v = ask_float(title, prompt)
     if v is None:
         return None
     return int(v)
 
 def ask_text(title, prompt):
+    """Demande un texte (string) à l'utilisateur."""
     dlg = ctk.CTkInputDialog(title=title, text=prompt)
     s = dlg.get_input()
     if s is None:
         return None
     return s.strip()
 
-# APP CTK : 1 bouton = 1 feature
+# APPLICATION CTk : 1 bouton = 1 fonctionnalité
 class ScientificTravelCalc(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Paramètres de la fenêtre principale
         self.title("Calculatrice Scientifique (GUI) ✈️")
-        self.geometry("520x820")
-        self.resizable(False, False)
+        self.geometry("520x820")       # Taille fixe
+        self.resizable(False, False)   # Empêche le redimensionnement
         self.configure(fg_color=COL_BG)
 
-        # Header
+        # -------- HEADER (haut de page) --------
         header = ctk.CTkFrame(self, fg_color=COL_CARD, corner_radius=18)
         header.pack(fill="x", padx=16, pady=(16, 10))
 
         top = ctk.CTkFrame(header, fg_color="transparent")
         top.pack(fill="x", padx=16, pady=(14, 4))
 
+        # Titre de l'application (à gauche)
         ctk.CTkLabel(
             top,
             text="Scientific • Travel Calculator ✈️",
@@ -476,6 +610,7 @@ class ScientificTravelCalc(ctk.CTk):
             text_color=COL_TEXT,
         ).pack(side="left")
 
+        # Petit emoji décoratif (à droite)
         ctk.CTkLabel(
             top,
             text="🧭",
@@ -483,6 +618,7 @@ class ScientificTravelCalc(ctk.CTk):
             text_color=COL_ACCENT,
         ).pack(side="right")
 
+        # Sous-titre explicatif
         ctk.CTkLabel(
             header,
             text="1 bouton = 1 fonctionnalité (sans menus console)",
@@ -491,12 +627,12 @@ class ScientificTravelCalc(ctk.CTk):
             anchor="w",
         ).pack(fill="x", padx=16, pady=(0, 12))
 
-        # barre dorée
+        # Barre dorée décorative sous le header
         ctk.CTkFrame(self, fg_color=COL_GOLD, height=4, corner_radius=10).pack(
             fill="x", padx=16, pady=(0, 12)
         )
 
-        # Résultat / log
+        # -------- Zone résultat / message --------
         self.result_var = ctk.StringVar(value="Prêt.")
         self.result = ctk.CTkLabel(
             self,
@@ -511,13 +647,14 @@ class ScientificTravelCalc(ctk.CTk):
         )
         self.result.pack(fill="x", padx=16, pady=(0, 12))
 
-        # Carte boutons
+        # -------- Carte principale contenant les boutons --------
         card = ctk.CTkFrame(self, fg_color=COL_CARD, corner_radius=18)
         card.pack(fill="x", padx=16, pady=(0, 12))
 
         grid = ctk.CTkFrame(card, fg_color="transparent")
         grid.pack(padx=12, pady=12)
 
+        # Liste des boutons : (texte, fonction appelée, type de style)
         btns = [
             ("Calcul basique", self.ui_basic, "op"),
             ("Puissances / Racines", self.ui_powers, "op"),
@@ -532,7 +669,7 @@ class ScientificTravelCalc(ctk.CTk):
             ("Effacer historique", self.clear_hist, "danger"),
         ]
 
-        # 6 lignes x 2 colonnes
+        # Placement des boutons en grille : 2 colonnes
         r = c = 0
         for label, cmd, kind in btns:
             b = self.make_button(grid, label, kind, cmd)
@@ -542,10 +679,11 @@ class ScientificTravelCalc(ctk.CTk):
                 c = 0
                 r += 1
 
+        # Les colonnes prennent la place disponible
         grid.grid_columnconfigure(0, weight=1)
         grid.grid_columnconfigure(1, weight=1)
 
-        # Historique
+        # -------- Zone historique (en bas) --------
         hist_card = ctk.CTkFrame(self, fg_color=COL_CARD, corner_radius=18)
         hist_card.pack(fill="both", padx=16, pady=(0, 16), expand=True)
 
@@ -564,11 +702,19 @@ class ScientificTravelCalc(ctk.CTk):
             font=ctk.CTkFont(size=12),
         )
         self.history.pack(fill="both", padx=16, pady=(0, 16), expand=True)
-        self.history.configure(state="disabled")
+        self.history.configure(state="disabled")  # lecture seule
 
+        # Chargement initial de l'historique au démarrage
         self.refresh_history()
 
     def make_button(self, parent, text, kind, cmd):
+        """
+        Fabrique un bouton avec un style différent selon 'kind' :
+        - op : boutons d'opérations
+        - act : actions (voir historique)
+        - danger : action risquée (effacer)
+        - eq : action principale (tracer)
+        """
         fg = COL_BTN
         text_col = COL_TEXT
         hover = "#EDEDED"
@@ -603,17 +749,22 @@ class ScientificTravelCalc(ctk.CTk):
         )
 
     def set_result(self, txt):
+        """Met à jour la zone résultat (message en haut)."""
         self.result_var.set(txt)
 
-    # ACTIONS UI
+    # ACTIONS UI (1 bouton = 1 action)
     def ui_basic(self):
+        """Calcul basique : demande a, opérateur, b, puis calcule."""
         a = ask_float("Calcul basique", "Premier nombre :")
         if a is None: return
+
         op = ask_text("Calcul basique", "Opérateur (+, -, *, /, ^, %) :")
         if not op: return
+
         b = ask_float("Calcul basique", "Deuxième nombre :")
         if b is None: return
 
+        # Choix de l'opération selon l'opérateur saisi
         if op == '^':
             res = puissance(a, b)
         elif op == '+':
@@ -630,18 +781,22 @@ class ScientificTravelCalc(ctk.CTk):
             messagebox.showerror("Erreur", "Opérateur inconnu.")
             return
 
+        # Cas impossible (division par 0, modulo par 0, etc.)
         if res is None:
             messagebox.showerror("Erreur", "Calcul impossible (ex: division par 0).")
             return
 
+        # Affichage + sauvegarde historique
         line = f"{a} {op} {b} = {res}"
         self.set_result(line)
         save_history(line)
         self.refresh_history()
 
     def ui_powers(self):
+        """Menu racines / valeur absolue."""
         choice = ask_text("Puissances / Racines", "Choix : 1) racine carrée  2) racine n-ième  3) valeur absolue")
         if not choice: return
+
         if choice == "1":
             n = ask_float("Racine carrée", "Nombre :")
             if n is None: return
@@ -650,6 +805,7 @@ class ScientificTravelCalc(ctk.CTk):
                 messagebox.showerror("Erreur", "Impossible (nombre négatif).")
                 return
             line = f"√{n} = {res}"
+
         elif choice == "2":
             x = ask_float("Racine n-ième", "Nombre :")
             if x is None: return
@@ -660,11 +816,13 @@ class ScientificTravelCalc(ctk.CTk):
                 messagebox.showerror("Erreur", "Calcul impossible.")
                 return
             line = f"{n}√{x} = {res}"
+
         elif choice == "3":
             x = ask_float("Valeur absolue", "Nombre :")
             if x is None: return
             res = valeur_absolue(x)
             line = f"|{x}| = {res}"
+
         else:
             return
 
@@ -673,12 +831,16 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_trigo(self):
+        """Menu trigo : sin / cos / tan."""
         choice = ask_text("Trigonométrie", "Choix : 1) sinus  2) cosinus  3) tangente")
         if not choice: return
+
         x = ask_float("Trigonométrie", "Angle :")
         if x is None: return
+
         unit = ask_text("Trigonométrie", "Unité : d (degrés) ou r (radians) ?")
         if not unit: return
+
         en_degres = (unit.lower() == "d")
 
         if choice == "1":
@@ -701,8 +863,10 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_trigo_inv(self):
+        """Menu trigo inverse : arcsin / arccos / arctan."""
         choice = ask_text("Trigonométrie inverse", "Choix : 1) arcsin  2) arccos  3) arctan")
         if not choice: return
+
         v = ask_float("Trigonométrie inverse", "Valeur :")
         if v is None: return
 
@@ -712,15 +876,18 @@ class ScientificTravelCalc(ctk.CTk):
                 messagebox.showerror("Erreur", "arcsin : valeur doit être entre -1 et 1.")
                 return
             line = f"arcsin({v}) = {res} rad"
+
         elif choice == "2":
             res = arccosinus(v)
             if res is None:
                 messagebox.showerror("Erreur", "arccos : valeur doit être entre -1 et 1.")
                 return
             line = f"arccos({v}) = {res} rad"
+
         elif choice == "3":
             res = arctangente(v)
             line = f"arctan({v}) = {res} rad"
+
         else:
             return
 
@@ -729,6 +896,7 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_logs(self):
+        """Menu logarithmes et exponentielle."""
         choice = ask_text("Logarithmes / Exponentielle", "Choix : 1) ln(x)  2) log10(x)  3) log_base(x)  4) exp(x)")
         if not choice: return
 
@@ -775,6 +943,7 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_fact_comb(self):
+        """Menu factorielle, combinaison, arrangement."""
         choice = ask_text("Factorielle / Combinatoire", "Choix : 1) n!  2) C(n,k)  3) A(n,k)")
         if not choice: return
 
@@ -817,8 +986,11 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_stats(self):
+        """Demande une liste de nombres et calcule moyenne, médiane, écart-type, min, max."""
         s = ask_text("Statistiques", "Entre des nombres séparés par des espaces :")
         if not s: return
+
+        # Transformation texte -> liste de nombres
         try:
             vals = [float(x.replace(",", ".")) for x in s.split()]
             if len(vals) == 0:
@@ -839,6 +1011,7 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_primes_pgcd(self):
+        """Menu nombres premiers / décomposition / PGCD / PPCM."""
         choice = ask_text("Premiers / PGCD / PPCM", "Choix : 1) test premier  2) décomposition  3) PGCD  4) PPCM")
         if not choice: return
 
@@ -878,21 +1051,26 @@ class ScientificTravelCalc(ctk.CTk):
         self.refresh_history()
 
     def ui_plot(self):
+        """Trace f(x) en demandant l'expression et l'intervalle [xmin, xmax]."""
         expr = ask_text("Tracer f(x)", "Expression (ex: 2x+1 ou sinus(x)*2 + x^2) :")
         if not expr:
             return
+
         xmin = ask_float("Tracer f(x)", "x min :")
         if xmin is None: return
         xmax = ask_float("Tracer f(x)", "x max :")
         if xmax is None: return
+
+        # Vérifications de base
         if xmax == xmin:
             messagebox.showerror("Erreur", "x max doit être différent de x min.")
             return
         if xmax < xmin:
             xmin, xmax = xmax, xmin
 
+        # Calcul de points pour tracer la courbe
         xs, ys = [], []
-        pas = (xmax - xmin) / 400
+        pas = (xmax - xmin) / 400  # nombre de points ~400
         x = xmin
         while x <= xmax:
             y = calculer_point_graphique(expr, x)
@@ -900,20 +1078,23 @@ class ScientificTravelCalc(ctk.CTk):
             ys.append(y)
             x += pas
 
+        # Tracé avec Matplotlib
         plt.figure(figsize=(10, 6))
         plt.plot(xs, ys, label=f"f(x) = {expr}")
-        plt.axhline(0, linewidth=1)
-        plt.axvline(0, linewidth=1)
+        plt.axhline(0, linewidth=1)  # axe horizontal
+        plt.axvline(0, linewidth=1)  # axe vertical
         plt.grid(True, linestyle='--', alpha=0.7)
         plt.title(f"Graphique : {expr}")
         plt.legend()
         plt.show()
 
+        # Sauvegarde dans l'historique
         save_history(f"Graphique : {expr}  (x de {xmin} à {xmax})")
         self.refresh_history()
         self.set_result(f"Graphique tracé : {expr}")
 
     def refresh_history(self):
+        """Recharge et affiche l'historique dans la zone texte."""
         content = read_history()
         self.history.configure(state="normal")
         self.history.delete("1.0", "end")
@@ -921,12 +1102,15 @@ class ScientificTravelCalc(ctk.CTk):
         self.history.configure(state="disabled")
 
     def clear_hist(self):
+        """Demande confirmation, puis efface l'historique."""
         if messagebox.askyesno("Confirmation", "Effacer l'historique ?"):
             clear_history()
             self.refresh_history()
             self.set_result("Historique effacé.")
 
+# LANCEMENT DE L'APP
 def main():
+    """Point d'entrée : crée l'application et lance la boucle graphique."""
     app = ScientificTravelCalc()
     app.mainloop()
 
